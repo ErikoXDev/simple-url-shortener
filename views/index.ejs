@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col justify-center items-center h-screen bg-[#0E1525] text-white">
+  <div class="bg-[#1C2333] p-4 rounded-md border border-[#3C445C] max-w-4xl">
+    <h1 class="text-xl font-bold mb-4 w-full">URL Shortener</h1>
+    <form action="/api/shorten" method="POST" id="shortenForm" class="flex flex-col gap-4">
+      <input placeholder="URL to shorten" name="url" class="bg-[#1C2333] rounded-md p-1 px-2 border border-[#3C445C] text-white outline-none focus:border-[#4E5569]">
+      <% if ( hasPassword) { %>
+      <input placeholder="Master Password" name="password" type="password" class="bg-[#1C2333] rounded-md p-1 px-2 border border-[#3C445C] text-white outline-none focus:border-[#4E5569]">
+      <% } else { %>
+        <input value="nopassword" name="password" hidden></input>
+      <% } %>
+      
+      <button type="submit" class="bg-[#0053A6] rounded-md p-1 px-2 hover:bg-[#0079F2] transition-colors duration-75">Shorten</button>
+    </form>
+    <div id="error" class="text-slate-200 mt-4" style="display: none;">
+      
+    </div>
+    <div id="resp" class="mt-4" style="display: none;">
+      <p class="mb-1">Created Link:</p>
+      <input placeholder="Link" id="created-link" class="bg-[#1C2333] rounded-md p-1 px-2 border border-[#3C445C] text-white outline-none focus:border-[#4E5569]">
+    </div>
+  </div>
+  
+  <script>
+    let form = document.getElementById("shortenForm");
+
+    let error = document.getElementById("error")
+    let resp = document.getElementById("resp")
+    let linkOutput = document.getElementById("created-link")
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
+
+      
+
+      let formData = new FormData(form)
+      let res = await fetch("/api/shorten", {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: formData.get("url"),
+          password: formData.get("password")
+        })
+      })
+      let json = await res.json()
+      console.log(json)
+      if (json.error) {
+        console.log(json.error)
+        resp.style.display = "none"
+        error.style.display = "block"
+        error.innerText = "Error: " + json.error
+      }
+      else if (json.id) {
+        console.log(json.id)
+        error.style.display = "none"
+        resp.style.display = "block"
+        linkOutput.value = window.location.toString() + json.id
+        
+      }
+      
+    })
+
+    linkOutput.addEventListener("click", (e) => {
+
+      // Select the text field
+      linkOutput.select();
+      linkOutput.setSelectionRange(0, 99999); // For mobile devices
+    
+       // Copy the text inside the text field
+      navigator.clipboard.writeText(linkOutput.value);
+    })
+  </script>
+</body>
+</html>
